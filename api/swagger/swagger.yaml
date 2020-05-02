@@ -1,0 +1,342 @@
+swagger: "2.0"
+info:
+  description: "Cette documentation d'API porte sur l'ensemble des fonctionnalité de l'outils. Il est possible d'utiliser la clé d'api `sample_bernard1` pour tester les fonctionnalités."
+  version: "1.0.0"
+  title: "Aide sociale"
+  termsOfService: "http://todo.com"
+  contact:
+    email: "todo@bernard1.com"
+  license:
+    name: "MIT"
+    url: "http://todo.com"
+host: "petstore.swagger.io"
+basePath: "/v1"
+tags:
+- name: "client"
+  description: "Tout sur la gestion des clients."
+- name: "seller"
+  description: "Tout sur la gestion des vendeurs."
+schemes:
+- "https"
+- "http"
+paths:
+  /authenticate/client/login:
+    get:
+      tags:
+      - "client"
+      summary: "Connecte un client à son instance"
+      operationId: "login_client"
+      parameters:
+      - in: "query"
+        name: "email"
+        description: "L'email du client"
+        required: true
+        type: "string"
+      - in: "query"
+        name: "password"
+        description: "Le mot de passe du client"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Connection réalisé avec succès, renvois d'un token."
+          schema:
+            type: "string"
+          headers:
+            X-Expires-After:
+              type: "string"
+              format: "date-time"
+              description: "date in UTC when token expires"
+        "400":
+          description: "Email ou mot de passe incorrect"
+      security:
+      - api_key: []
+    
+  /authenticate/client/logout:
+    get:
+      tags:
+      - "client"
+      summary: "Déconnecte un client de l'instance"
+      operationId: "logout_client"
+      parameters:
+      - in: "header"
+        name: "token"
+        description: "Le token d'identification"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Déconnection réalisé avec succès"
+        "400":
+          description: "Token inconnu"
+      security:
+      - api_key: []
+
+  /authenticate/client/register:
+    post:
+      tags:
+      - "client"
+      summary: "Enregistre un nouveau client"
+      operationId: "register_client"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Seul les champs `email` et `password` sont obligatoire. Les champs `id` et `clientStatus` sont ignorés."
+        required: true
+        schema:
+          $ref: "#/definitions/Client"
+      responses:
+        "200":
+          description: "Enregistrement réalisé avec succès, renvois d'un token."
+          schema:
+            type: "string"
+          headers:
+            X-Expires-After:
+              type: "string"
+              format: "date-time"
+              description: "date in UTC when token expires"
+        "400":
+          description: "Email ou mot de passe incorrect"
+      security:
+      - api_key: []
+      
+  /clients/{clientId}:
+    get:
+      tags:
+      - "client"
+      summary: "Récupérer les informations clients"
+      description: "Ce endpoint est employé par un utilisateur authentifié pour récupérer les informations le concernant."
+      operationId: "fetch_client"
+      parameters:
+      - in: "path"
+        name: "clientId"
+        description: "L'id du client"
+        required: true
+        type: integer
+      - in: "header"
+        name: "token"
+        description: "Le token d'identification"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Renvois des informations client"
+          schema:
+            $ref: "#/definitions/Client"
+        "400":
+          description: "Token incorrect"
+      security:
+      - api_key: []
+      
+    patch:
+      tags:
+      - "client"
+      summary: "Modifier les informations clients"
+      description: "Ce endpoint est employé par un utilisateur authentifié pour modifier les informations le concernant."
+      operationId: "edit_client"
+      parameters:
+      - in: "path"
+        name: "clientId"
+        description: "L'id du client"
+        required: true
+        type: integer
+      - in: "header"
+        name: "token"
+        description: "Le token d'identification"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        required: true
+        description: "Les champs `id` et `clientStatus` sont ignorés."
+        schema:
+          $ref: "#/definitions/Client"
+      responses:
+        200:
+          description: Renvois les informations client mist à jour
+          schema: 
+            $ref: "#/definitions/Client"
+        400:
+          description: Token incorrect
+      security:
+      - api_key: []
+      
+  /clients/{clientId}/wallets:
+    get:
+      summary: La liste des Wallet
+      tags:
+        - client
+      description: Récupère la liste des portefeuilles d'un client
+      parameters: 
+        - in: header
+          name: token
+          type: string
+          required: true
+          description: Token d'identification du client
+        - in: path
+          name: clientId
+          type: integer
+          required: true
+          description: Id du client
+      responses: 
+        200: 
+          description: Un array d'objet Wallet
+          schema: 
+            type: array
+            items:
+              $ref: "#/definitions/Wallet"
+      security:
+      - api_key: []
+
+    post:
+      summary: Crée un nouveau portefeuille
+      tags:
+        - client
+      parameters: 
+        - in: header
+          name: token
+          type: string
+          required: true
+          description: Token d'identification du client
+        - in: path
+          name: clientId
+          type: integer
+          required: true
+          description: Id du client
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/Wallet"
+      responses: 
+       200:
+         description: Le Wallet juste crée
+         schema: 
+           $ref: "#/definitions/Wallet"
+
+  /clients/{clientId}/wallets/{walletId}:
+    get:
+      summary: Récupère un Wallet
+      tags:
+        - client
+      description: Récupère un wallet en particulier
+      parameters:
+        - in: header
+          name: token
+          type: string
+          required: true
+          description: Token d'identification du client
+        - in: path
+          name: clientId
+          type: integer
+          required: true
+          description: Id du client
+        - in: path
+          name: walletId
+          type: integer
+          required: true
+          description: Id du client
+      responses: 
+        200: 
+          description: Un objet Wallet
+          schema: 
+            $ref: "#/definitions/Wallet"
+      security:
+      - api_key: []      
+
+securityDefinitions:
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+  client_auth:
+    type: "basic"
+  seller_auth:
+    type: "basic"
+definitions:
+
+  Client:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      email:
+        type: "string"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+      password:
+        type: "string"
+      phone:
+        type: "string"
+      clientStatus:
+        type: "integer"
+        format: "int32"
+        description: "Client Status"
+    xml:
+      name: "Client"
+      
+  Wallet:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      seller_id: 
+        type: "integer"
+        format: "int64"
+      client_id: 
+        type: "integer"
+        format: "int64"
+    xml:
+      name: "Wallet"
+  
+  Seller:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      email:
+        type: "string"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+      password:
+        type: "string"
+      phone:
+        type: "string"
+    xml:
+      name: "Seller"
+      
+       
+  Order: 
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      petId:
+        type: "integer"
+        format: "int64"
+      quantity:
+        type: "integer"
+        format: "int32"
+      shipDate:
+        type: "string"
+        format: "date-time"
+      status:
+        type: "string"
+        description: "Order Status"
+        enum:
+        - "placed"
+        - "approved"
+        - "delivered"
+      complete:
+        type: "boolean"
+        default: false
+    xml:
+      name: "Order"
